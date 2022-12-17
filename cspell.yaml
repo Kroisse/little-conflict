@@ -1,0 +1,18 @@
+version: 0.2
+language: en
+dictionaries:
+- bevy
+- en_US
+- rust
+- rust_misc
+- softwareTerms
+dictionaryDefinitions:
+- name: bevy
+  path: ./.cspell/bevy.words.txt
+- name: rust_misc
+  path: ./.cspell/rust_misc.words.txt
+ignorePaths:
+- .cspell/**
+- Cargo.toml
+- LICENSE
+- target/**
