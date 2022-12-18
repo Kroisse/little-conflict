@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use rand::prelude::*;
 
-#[derive(Component)]
-pub struct StatsText;
+#[derive(Component, Default)]
+pub struct Stats;
 
 #[derive(Component)]
 pub struct Velocity(pub Vec2);

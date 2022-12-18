@@ -1,5 +1,23 @@
-use crate::components::Velocity;
-use bevy::prelude::*;
+use crate::components::{Stats, Velocity};
+use bevy::{
+    diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin},
+    prelude::*,
+};
+
+pub fn stats(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text, With<Stats>>) {
+    let mut text = query.single_mut();
+    if let Some(fps) = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS) {
+        if let Some(raw) = fps.value() {
+            text.sections[1].value = format!("{raw:.2}");
+        }
+        if let Some(sma) = fps.average() {
+            text.sections[3].value = format!("{sma:.2}");
+        }
+        if let Some(ema) = fps.smoothed() {
+            text.sections[5].value = format!("{ema:.2}");
+        }
+    }
+}
 
 pub fn collide_asteroids(mut query: Query<(&mut Transform, &mut Velocity)>) {
     let mut iter = query.iter_combinations_mut();

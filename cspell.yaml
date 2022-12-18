@@ -16,3 +16,5 @@ ignorePaths:
 - Cargo.toml
 - LICENSE
 - target/**
+words:
+- fontdb

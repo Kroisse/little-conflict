@@ -1,8 +1,11 @@
 mod components;
 mod systems;
 
-use bevy::{prelude::*, render::camera::ScalingMode, time::FixedTimestep};
-use components::AsteroidBundle;
+use bevy::{
+    diagnostic::FrameTimeDiagnosticsPlugin, prelude::*, render::camera::ScalingMode,
+    time::FixedTimestep,
+};
+use components::{AsteroidBundle, Stats};
 use rand::prelude::*;
 
 fn main() {
@@ -19,7 +22,9 @@ fn main() {
 
             ..Default::default()
         }))
+        .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_startup_system(startup)
+        .add_startup_system(setup_stats)
         .add_system(systems::collide_asteroids_with_boundaries)
         .add_system(systems::collide_asteroids)
         .add_system(systems::translate_asteroids)
@@ -28,6 +33,11 @@ fn main() {
             SystemSet::new()
                 .with_run_criteria(FixedTimestep::step(1.0 / 60.))
                 .with_system(systems::rotate_asteroids),
+        )
+        .add_system_set(
+            SystemSet::new()
+                .with_run_criteria(FixedTimestep::step(0.5))
+                .with_system(systems::stats),
         )
         .run();
 }
@@ -77,4 +87,53 @@ fn startup(
         .into(),
         ..Default::default()
     });
+}
+
+fn setup_stats(mut commands: Commands, asset_server: Res<AssetServer>) {
+    let mut db = fontdb::Database::new();
+    db.load_system_fonts();
+    let id = db
+        .query(&fontdb::Query {
+            families: &[fontdb::Family::SansSerif],
+            style: fontdb::Style::Normal,
+            ..Default::default()
+        })
+        .unwrap();
+    let (source, _) = db.face_source(id).unwrap();
+    let handle = match source {
+        fontdb::Source::File(path) => asset_server.load(path),
+        _ => panic!("Unsupported font source"),
+    };
+
+    let section = |color, value: &str| {
+        TextSection::new(
+            value,
+            TextStyle {
+                font: handle.clone(),
+                font_size: 20.0,
+                color,
+            },
+        )
+    };
+
+    commands.spawn((
+        Stats::default(),
+        TextBundle::from_sections([
+            section(Color::LIME_GREEN, "FPS (raw): "),
+            section(Color::WHITE, ""),
+            section(Color::LIME_GREEN, "\nFPS (SMA): "),
+            section(Color::WHITE, ""),
+            section(Color::LIME_GREEN, "\nFPS (EMA): "),
+            section(Color::WHITE, ""),
+        ])
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            position: UiRect {
+                left: Val::Px(16.),
+                top: Val::Px(16.),
+                ..Default::default()
+            },
+            ..Default::default()
+        }),
+    ));
 }
